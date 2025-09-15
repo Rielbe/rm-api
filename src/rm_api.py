@@ -69,7 +69,7 @@ def parse_result(result: dict, type: Query_Type) -> Character_Response | Locatio
         return Location_Response(**result)
 
 
-async def get_paginated_results(client: AsyncClient, url: str, type: Query_Type) -> list[dict]:
+async def get_paginated_results(client: AsyncClient, url: str, type: Query_Type) -> list[Character_Data | Location_Data]:
     """Method that resolves the pagination from the queries
 
     Args:
@@ -90,10 +90,8 @@ async def get_paginated_results(client: AsyncClient, url: str, type: Query_Type)
 
     parsed_results = [parse_result(r, type) for r in results]
 
-    return first_result.results + [r for sublist in parsed_results for r in sublist]
+    return first_result.results + [r for sublist in parsed_results for r in sublist.results]
 
-
-    # if first_result["info"]
 
 async def get_data() -> list[dict]:
     """Makes a set of queries in order to get the result specified in the requirements
