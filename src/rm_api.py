@@ -16,6 +16,17 @@ class LocationFilter(BaseModel):
     name: str
     url: str
 
+    def __eq__(self, other):
+        if isinstance(other, LocationFilter):
+            return self.name == other.name
+        return NotImplemented
+
+    def __lt__(self, other):
+        if isinstance(other, LocationFilter):
+            return self.name < other.name
+        return NotImplemented
+
+
 class Character_Data(BaseModel):
     id: int
     name: str
