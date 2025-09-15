@@ -93,7 +93,7 @@ async def get_paginated_results(client: AsyncClient, url: str, type: Query_Type)
     return first_result.results + [r for sublist in parsed_results for r in sublist.results]
 
 
-async def get_data() -> list[dict]:
+async def get_data() -> list[Character_Data]:
     """Makes a set of queries in order to get the result specified in the requirements
 
     Returns:
@@ -103,4 +103,9 @@ async def get_data() -> list[dict]:
     async with AsyncClient(timeout=10) as client:
         # First list all possible locations that are "Earth"
         earth_locations = await get_paginated_results(client, BASE_API + "/location?name=Earth", "location")
+        earth_fixed_names = [x.name for x in earth_locations]
         
+        characters = await get_paginated_results(client, BASE_API + "/character?species=human&status=alive", "character")
+        earth_characters = [x for x in characters if x.origin.name in earth_fixed_names]
+        
+        return earth_characters
