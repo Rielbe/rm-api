@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status, Query
+from fastapi import APIRouter, HTTPException, status, Query, Request
 from pydantic import BaseModel
 from operator import attrgetter
 
@@ -15,17 +15,24 @@ character_router = APIRouter()
         "description": "Invalid user input"
     }
 })
-async def get_earth_characters(sort_by: list[str] | None = Query(None, description=f"Allowed values: {', '.join(list(Character_Data.model_fields.keys()))}")) -> list[Character_Data]:
-    
+async def get_earth_characters(request: Request, sort_by: list[str] | None = Query(None, description=f"Allowed values: {', '.join(list(Character_Data.model_fields.keys()))}")) -> list[Character_Data]:
+    if sort_by:
+        for field in sort_by:
+            if field not in Character_Data.model_fields:
+                raise HTTPException(detail=f"Invalid sort field: {field}", status_code=status.HTTP_400_BAD_REQUEST)
+
+    allowed_params = {"sort_by"}
+    for param in request.query_params.keys():
+        if param not in allowed_params:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Unknown query parameter: {param}"
+            )
+
     earth_characters = await get_data()
 
     if not sort_by:
         return earth_characters
-    
-    for field in sort_by:
-        if field not in Character_Data.model_fields:
-            raise HTTPException(detail=f"Invalid sort field: {field}", status_code=status.HTTP_400_BAD_REQUEST)
-    
     sorted_characters = sorted(
         earth_characters,
         key=attrgetter(*sort_by)
