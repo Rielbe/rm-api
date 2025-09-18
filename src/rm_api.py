@@ -1,8 +1,10 @@
 import asyncio
 from datetime import datetime
+from fastapi import HTTPException
 from httpx import AsyncClient
 from pydantic import BaseModel
 from typing import Literal
+
 from src.db import insert_query
 
 BASE_API = "https://rickandmortyapi.com/api"
@@ -61,6 +63,8 @@ class Location_Response(BaseModel):
 
 Query_Type = Literal["character", "location"]
 
+MAX_TRIES = 10
+
 async def make_safe_query(client: AsyncClient, url: str) -> dict:
     """Method for handling errors
 
@@ -71,7 +75,19 @@ async def make_safe_query(client: AsyncClient, url: str) -> dict:
     Returns:
         dict: Result from the API
     """
-    result = (await client.get(url)).json()
+    tries = 0
+    while True:
+        if tries >= MAX_TRIES:
+            raise HTTPException(500, "API server may not be available. Max retries reached...")
+        try:
+            response = await client.get(url)
+            response.raise_for_status()
+            result = response.json()
+            break
+        except Exception as e:
+            print("Error while making query, trying again...")
+            print(e)
+            asyncio.sleep(1)
     return result
 
 def parse_result(result: dict, type: Query_Type) -> Character_Response | Location_Response:
