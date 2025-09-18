@@ -89,6 +89,7 @@ async def make_safe_query(client: AsyncClient, url: str) -> dict:
         except Exception as e:
             print("Error while making query, trying again...")
             print(e)
+            tries += 1
             asyncio.sleep(1)
     return result
 
