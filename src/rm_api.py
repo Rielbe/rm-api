@@ -3,6 +3,7 @@ from datetime import datetime
 from httpx import AsyncClient
 from pydantic import BaseModel
 from typing import Literal
+from src.db import insert_query
 
 BASE_API = "https://rickandmortyapi.com/api"
 
@@ -118,5 +119,9 @@ async def get_data() -> list[Character_Data]:
         
         characters = await get_paginated_results(client, BASE_API + "/character?species=human&status=alive", "character")
         earth_characters = [x for x in characters if x.origin.name in earth_fixed_names]
-        
+        try:
+            await insert_query([x.model_dump_json() for x in earth_characters])
+        except Exception as e:
+            print("~UPS! Something wrong with DB insert!")
+            print(e)
         return earth_characters
