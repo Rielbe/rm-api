@@ -2,9 +2,11 @@ import asyncio
 from datetime import datetime
 from fastapi import HTTPException
 from httpx import AsyncClient
+import json
 from pydantic import BaseModel
 from typing import Literal
 
+from src.cache import insert_redis, get_redis
 from src.db import insert_query
 
 BASE_API = "https://rickandmortyapi.com/api"
@@ -127,7 +129,17 @@ async def get_data() -> list[Character_Data]:
     Returns:
         list[dict]: List of results from the API
     """
-    
+
+    try:
+        raw_data = await get_redis("DATA")
+        if raw_data is not None:
+            data = json.loads(raw_data)
+            data = [Character_Data.model_validate_json(entry) for entry in data]
+            return data
+    except Exception as e:
+        print("Something went wrong with reading redis data. Querying again agains API...")
+        print(e)
+
     async with AsyncClient(timeout=10) as client:
         # First list all possible locations that are "Earth"
         earth_locations = await get_paginated_results(client, BASE_API + "/location?name=Earth", "location")
@@ -135,8 +147,15 @@ async def get_data() -> list[Character_Data]:
         
         characters = await get_paginated_results(client, BASE_API + "/character?species=human&status=alive", "character")
         earth_characters = [x for x in characters if x.origin.name in earth_fixed_names]
+
+        json_serialized_data = [x.model_dump_json() for x in earth_characters]
         try:
-            await insert_query([x.model_dump_json() for x in earth_characters])
+            await insert_redis("DATA", json_serialized_data)
+        except Exception as e:
+            print("~UPS! Something wrong with Redis insert!")
+            print(e)
+        try:
+            await insert_query(json_serialized_data)
         except Exception as e:
             print("~UPS! Something wrong with DB insert!")
             print(e)
