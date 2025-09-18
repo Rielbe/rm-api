@@ -1,0 +1,59 @@
+replicaCount: 2
+
+image:
+  repository: rielbe/rm-api
+  tag: 0.1.0
+  pullPolicy: Always
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 200m
+    memory: 256Mi
+
+hpa:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 50
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  host: rm-api.local
+  annotations: {}
+  tls: []
+
+sidecar:
+  enabled: true
+  image: fluent/fluentd:latest
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+secrets:
+  enabled: true
+  magicValue: 12345
+
+postgres:
+  user: myuser
+  password: mypassword
+  host: host.docker.internal
+  database: rmapi
+  port: 5432
+
+redis:
+  host: host.docker.internal
+  port: 6379
+  db: 0
+  password: ""
+  ttlDuration: 10

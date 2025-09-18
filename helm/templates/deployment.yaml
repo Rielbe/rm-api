@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rm-deployment
+  labels:
+    app: rm-api
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: rm-api
+  template:
+    metadata:
+      labels:
+        app: rm-api
+    spec:
+      containers:
+        - name: rm-api
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          resources:
+            limits:
+              cpu: {{ .Values.resources.limits.cpu }}
+              memory: {{ .Values.resources.limits.memory }}
+            requests:
+              cpu: {{ .Values.resources.requests.cpu }}
+              memory: {{ .Values.resources.requests.memory }}
+          env:
+            - name: MAGIC_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: rm-deployment
+                  key: magicValue
+
+            - name: PG_USER
+              value: "{{ .Values.postgres.user }}"
+            - name: PG_PASSWORD
+              value: "{{ .Values.postgres.password }}"
+            - name: PG_HOST
+              value: "{{ .Values.postgres.host }}"
+            - name: PG_DATABASE
+              value: "{{ .Values.postgres.database }}"
+            - name: REDIS_HOST
+              value: "{{ .Values.redis.host }}"
+            - name: REDIS_PORT
+              value: "{{ .Values.redis.port }}"
+            - name: REDIS_DB
+              value: "{{ .Values.redis.db }}"
+            - name: REDIS_PASSWORD
+              value: "{{ .Values.redis.password }}"
+            - name: TTL_DURATION
+              value: "{{ .Values.redis.ttlDuration }}"
+          ports:
+            - containerPort: 8000
+
+{{- if .Values.sidecar.enabled }}
+        - name: log-sidecar
+          image: {{ .Values.sidecar.image }}
+          resources:
+            limits:
+              cpu: {{ .Values.sidecar.resources.limits.cpu }}
+              memory: {{ .Values.sidecar.resources.limits.memory }}
+            requests:
+              cpu: {{ .Values.sidecar.resources.requests.cpu }}
+              memory: {{ .Values.sidecar.resources.requests.memory }}
+{{- end }}
