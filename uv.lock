@@ -164,10 +164,6 @@ source = { virtual = "." }
 dependencies = [
     { name = "fastapi" },
     { name = "httpx" },
-]
-
-[package.dev-dependencies]
-dev = [
     { name = "uvicorn" },
 ]
 
@@ -175,10 +171,11 @@ dev = [
 requires-dist = [
     { name = "fastapi", specifier = ">=0.116.1" },
     { name = "httpx", specifier = ">=0.28.1" },
+    { name = "uvicorn", specifier = ">=0.35.0" },
 ]
 
 [package.metadata.requires-dev]
-dev = [{ name = "uvicorn", specifier = ">=0.35.0" }]
+dev = []
 
 [[package]]
 name = "sniffio"
