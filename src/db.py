@@ -59,3 +59,6 @@ async def insert_query(data: Any):
             """,
             json_data
         )
+
+def db_available() -> bool:
+    return DB_AVAILABLE

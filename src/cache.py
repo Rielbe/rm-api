@@ -45,3 +45,9 @@ async def get_redis(key: str) -> str | None:
     if not REDIS_AVAILABLE or r is None:
         return None
     return await r.get(key)
+
+def cache_available() -> bool:
+    return REDIS_AVAILABLE
+
+async def cache_is_ready() -> bool:
+    return True if (await get_redis("DATA")) else False

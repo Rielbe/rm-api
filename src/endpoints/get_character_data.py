@@ -4,6 +4,9 @@ from operator import attrgetter
 
 from src.rm_api import Character_Data, get_data
 
+from src.cache import cache_available, cache_is_ready
+from src.db import db_available
+
 class ErrorResponse(BaseModel):
     detail: str
 
@@ -39,3 +42,8 @@ async def get_earth_characters(request: Request, sort_by: list[str] | None = Que
     )
 
     return sorted_characters
+
+# Using same router for simplicity
+@character_router.get("/healthcheck")
+async def get_status():
+    return {"Server cache available": cache_available(), "Cache is ready": await cache_is_ready(), "DB available": db_available()}
