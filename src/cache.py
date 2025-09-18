@@ -14,7 +14,7 @@ REDIS_AVAILABLE = False
 r: redis.Redis | None = None
 
 
-TTL_DURATION = 10
+TTL_DURATION = getenv("TTL_DURATION", 10)
 
 async def init_redis():
     global r, REDIS_AVAILABLE
