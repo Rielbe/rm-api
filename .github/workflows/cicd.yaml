@@ -1,0 +1,68 @@
+name: CI/CD Pipeline (Python + uv + pyproject.toml)
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-test-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Setup PATH for uv
+        run: echo "${HOME}/.local/bin" >> $GITHUB_PATH
+
+      - name: Sync Python environment
+        run: uv sync
+
+      - name: Lint with ruff
+        run: uv run ruff check .
+
+      - name: Run unit tests
+        run: uv run pytest -v tests/unit
+
+      - name: Build Docker image
+        run: docker build . -t rielbe/rm-api:0.1.0 --target app
+
+      - name: Create kind cluster
+        uses: helm/kind-action@v1.12.0
+        with:
+          wait-ready: true
+          cluster_name: kind
+
+      - name: Load image into kind
+        run: kind load docker-image rielbe/rm-api:0.1.0
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4.2.0
+
+      - name: Helm install
+        run: helm upgrade --install rmapi ./helm
+
+      - name: Wait for rollout
+        run: kubectl rollout status deployment/rm-deployment
+
+      - name: Run integration tests
+        run: |
+          kubectl port-forward svc/rm-deployment 8080:80 &
+          sleep 5
+          curl -f http://127.0.0.1:8080/healthcheck
+          curl -f http://127.0.0.1:8080/earth_characters
+
+      - name: DockerHub login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Push image
+        run: |
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/rm-api:0.1.0
