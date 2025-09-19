@@ -3,8 +3,6 @@ name: CI/CD Pipeline (Python + uv + pyproject.toml)
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
   build-test-deploy:
