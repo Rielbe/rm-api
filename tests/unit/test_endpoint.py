@@ -18,5 +18,10 @@ def test_error_not_found():
     result = client.get("/nowhere")
     assert result.status_code == 404
 
+def test_limit_request():
+    for i in range(0,10):
+        result = client.get("/healthcheck")
+    assert result.status_code == 429
+
 # Here the get_data function could me mocked to return a fix list of result
 # and then test some sorting logic

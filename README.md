@@ -64,3 +64,4 @@ helm install rmapi ./helm --set redis.host=host.docker.internal --set postgres.h
 ## Known limitations / problems
 - When running the tests, a DeprecationWarning is shown. I guess this has to be related on how the FastAPI TestClient handles the app context. This doesn't happen when running the app directly.
 - The code only checks for the databases at startup. If the databases are not running / can't be reached when the app starts, it won't try to write/read from them.
+- The request limit works per-instance. If I had more time, I would reuse the cache database as a more reliable limit mechanism for multi-instance deployments.
