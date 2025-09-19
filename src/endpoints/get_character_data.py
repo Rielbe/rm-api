@@ -6,7 +6,7 @@ from src.rm_api import Character_Data, get_data
 
 from src.cache import cache_available, cache_is_ready
 from src.db import db_available
-
+from src.metrics import sort_by_counter
 
 class ErrorResponse(BaseModel):
     detail: str
@@ -43,6 +43,12 @@ async def get_earth_characters(
             )
 
     earth_characters = await get_data()
+
+    if sort_by:
+        allowed_fields = set(Character_Data.model_fields.keys())
+        for field in sort_by:
+            if field in allowed_fields:
+                sort_by_counter.labels(sort_by=field).inc()
 
     if not sort_by:
         return earth_characters

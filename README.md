@@ -61,7 +61,17 @@ For example, for setting the hosts for the databases:
 helm install rmapi ./helm --set redis.host=host.docker.internal --set postgres.host=host.docker.internal
 ```
 
+## Optional features
+
+### Metrics
+
+Prometheus metrics are exposed through `/metrics` endpoint using the `prometheus-fastapi-instrumentator` package. This exposes generic metrics related to performance.
+
+As is stated in the requirements, a business metric has been implemented. The instrumentator counts the amount of times a sort key has been used:
+![Sort metrics](docs/metrics.png)
+
 ## Known limitations / problems
 - When running the tests, a DeprecationWarning is shown. I guess this has to be related on how the FastAPI TestClient handles the app context. This doesn't happen when running the app directly.
 - The code only checks for the databases at startup. If the databases are not running / can't be reached when the app starts, it won't try to write/read from them.
 - The request limit works per-instance. If I had more time, I would reuse the cache database as a more reliable limit mechanism for multi-instance deployments.
+- The metrics instrumentator keeps the metric by instance. Aggregations should be made at Prometheus.

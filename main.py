@@ -8,7 +8,7 @@ from src.endpoints.get_character_data import character_router
 from src.cache import init_redis, close_redis
 from src.db import init_db, close_db
 from src.rm_api import get_data
-
+from src.metrics import setup_metrics
 
 async def lifespan(app: FastAPI):
     await init_db()
@@ -22,7 +22,6 @@ PER = 60  # refill window seconds
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(character_router)
-
 
 buckets = defaultdict(lambda: {"available_requests": RATE, "last": time.time()})
 
@@ -52,7 +51,7 @@ async def rate_limit_middleware(request: Request, call_next):
     response = await call_next(request)
     return response
 
-
+setup_metrics(app)
 
 if __name__ == "__main__":
     result = asyncio.run(get_data())
