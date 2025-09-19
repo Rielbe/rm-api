@@ -15,23 +15,25 @@ DB_AVAILABLE = False
 
 pool: asyncpg.pool.Pool | None = None
 
+
 async def init_db():
     global pool
     global DB_AVAILABLE
     try:
         pool = await asyncpg.create_pool(**DB_CONFIG)
         async with pool.acquire() as conn:
-            await conn.execute('''
+            await conn.execute("""
                 CREATE TABLE IF NOT EXISTS query(
                     id SERIAL PRIMARY KEY,
                     ts TIMESTAMP,
                     data JSON
                 )
-            ''')
+            """)
         print("Database initialized successfully!")
         DB_AVAILABLE = True
     except Exception as e:
         print(f"Database connection failed: {e}")
+
 
 async def close_db():
     global pool
@@ -57,8 +59,9 @@ async def insert_query(data: Any):
             INSERT INTO query(ts, data)
             VALUES (NOW(), $1)
             """,
-            json_data
+            json_data,
         )
+
 
 def db_available() -> bool:
     return DB_AVAILABLE
